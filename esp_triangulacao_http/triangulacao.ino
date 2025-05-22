@@ -1,7 +1,3 @@
-
-//codigo de triangulação com retorno http
-
-
 #include <WiFi.h>
 #include <WebServer.h>
 
@@ -25,8 +21,8 @@ AccessPoint aps[3] = {
   {"AP3", 2.5, 4.33, 0, 0}
 };
 
-const int RSSI_REF = -40;
-const float PATH_LOSS_EXPONENT = 2.5;
+const int RSSI_REF = -40;                // RSSI a 1 metro (em dBm)
+const float PATH_LOSS_EXPONENT = 2.5;   // Fator de perda do ambiente
 
 float calculateDistance(int rssi) {
   return pow(10.0, ((RSSI_REF - rssi) / (10.0 * PATH_LOSS_EXPONENT)));
@@ -55,15 +51,44 @@ bool trilaterate(float& x, float& y) {
 }
 
 void handleRoot() {
-  float x = 0, y = 0;
+  Serial.println("Iniciando scan de redes WiFi...");
+  int networks = WiFi.scanNetworks();
 
-  // Simula RSSI para teste (substitua por WiFi.scanNetworks() em produção)
-  aps[0].rssi = -45;
-  aps[1].rssi = -50;
-  aps[2].rssi = -55;
+  if (networks == 0) {
+    Serial.println("Nenhuma rede encontrada.");
+    server.send(200, "text/html", "<p>Erro: Nenhuma rede WiFi encontrada.</p>");
+    return;
+  }
 
+  // Zera os RSSIs antes de buscar
   for (int i = 0; i < 3; i++) {
-    aps[i].distance = calculateDistance(aps[i].rssi);
+    aps[i].rssi = -1000; // Valor impossivel para RSSI válido
+  }
+
+  // Para cada AP procurado, busca o RSSI no resultado do scan
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < networks; j++) {
+      if (WiFi.SSID(j) == aps[i].ssid) {
+        aps[i].rssi = WiFi.RSSI(j);
+        break;
+      }
+    }
+    if (aps[i].rssi == -1000) {
+      Serial.printf("⚠️ AP \"%s\" não encontrado no scan.\n", aps[i].ssid);
+    } else {
+      aps[i].distance = calculateDistance(aps[i].rssi);
+      Serial.printf("AP \"%s\": RSSI = %d dBm, distância estimada = %.2f m\n",
+                    aps[i].ssid, aps[i].rssi, aps[i].distance);
+    }
+  }
+
+  // Verifica se encontrou todos os APs
+  bool allFound = true;
+  for (int i = 0; i < 3; i++) {
+    if (aps[i].rssi == -1000) {
+      allFound = false;
+      break;
+    }
   }
 
   String html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Localização ESP32</title>";
@@ -71,11 +96,16 @@ void handleRoot() {
   html += "<style>body{font-family:sans-serif;text-align:center;padding-top:50px;}</style></head><body>";
   html += "<h1>📍 Posição Estimada</h1>";
 
-  if (trilaterate(x, y)) {
-    html += "<p><strong>X:</strong> " + String(x, 2) + " m</p>";
-    html += "<p><strong>Y:</strong> " + String(y, 2) + " m</p>";
+  if (!allFound) {
+    html += "<p><strong>Erro:</strong> Nem todos os APs foram encontrados no scan.</p>";
   } else {
-    html += "<p>Erro ao calcular posição (divisão por zero)</p>";
+    float x, y;
+    if (trilaterate(x, y)) {
+      html += "<p><strong>X:</strong> " + String(x, 2) + " m</p>";
+      html += "<p><strong>Y:</strong> " + String(y, 2) + " m</p>";
+    } else {
+      html += "<p>Erro ao calcular posição (divisão por zero).</p>";
+    }
   }
 
   html += "<p><em>Atualiza a cada 5 segundos</em></p>";
@@ -86,6 +116,7 @@ void handleRoot() {
 
 void setup() {
   Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   Serial.print("Conectando ao Wi-Fi");
