@@ -8,7 +8,7 @@ e a ocupação das vagas, ajudando os funcionários a gerenciar o espaço de for
 
 O sistema possui duas funcionalidades principais:
 
-- **Triangulação de sinal WiFi com ESP32:** Utilizando múltiplos ESP32 distribuídos nas motos, o sistema realiza a triangulação do sinal WiFi emitido pelas motos, permitindo estimar a posição delas dentro do espaço monitorado.
+- **Triangulação de sinal WiFi com ESP32:** Utilizando múltiplos ESP32 distribuídos nas motos e pelo pátio, o sistema realiza a triangulação do sinal WiFi emitido pelas motos, permitindo estimar a posição delas dentro do espaço monitorado.
 - **Sensor de vagas com Arduino:** Um sensor conectado a um Arduino detecta a presença de motos nas vagas do patio, acendendo uma luz sempre que a vaga for ocupada.
 
 ## Estrutura do Projeto
@@ -31,6 +31,11 @@ O projeto está dividido em dois módulos principais:
 - Inclui o código Arduino (`sensor.ino`) para o sensor de monitoramento das vagas de motos.
 - Possui um arquivo `diagram.json` indicando o diagrama utilizado no Wokwi.
 - Detecta a presença de motos nas vagas e acendendo uma luz sempre que a vaga for ocupada.
+
+### 4. emissor_moto
+- Código para o ESP32 da moto (sinal.ino), que atua como ponto de acesso Wi-Fi.
+- Emite um SSID fixo (ex: Moto001) que pode ser detectado pelos sensores de triangulação.
+- Serve como referência móvel para localização.
 
 ## Hardware Utilizado
 
