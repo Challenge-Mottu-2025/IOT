@@ -21,8 +21,8 @@ AccessPoint aps[3] = {
   {"AP3", 2.5, 4.33, 0, 0}
 };
 
-const int RSSI_REF = -40;                // RSSI a 1 metro (em dBm)
-const float PATH_LOSS_EXPONENT = 2.5;   // Fator de perda do ambiente
+const int RSSI_REF = -40;                
+const float PATH_LOSS_EXPONENT = 2.5;   
 
 float calculateDistance(int rssi) {
   return pow(10.0, ((RSSI_REF - rssi) / (10.0 * PATH_LOSS_EXPONENT)));
@@ -42,7 +42,7 @@ bool trilaterate(float& x, float& y) {
 
   float denominator = (A_coef * E_coef - D_coef * B_coef);
   if (denominator == 0) {
-    return false; // Impossível calcular (divisão por zero)
+    return false; 
   }
 
   x = (C_coef * E_coef - F_coef * B_coef) / denominator;
@@ -62,7 +62,7 @@ void handleRoot() {
 
   // Zera os RSSIs antes de buscar
   for (int i = 0; i < 3; i++) {
-    aps[i].rssi = -1000; // Valor impossivel para RSSI válido
+    aps[i].rssi = -1000; 
   }
 
   // Para cada AP procurado, busca o RSSI no resultado do scan
