@@ -1,8 +1,8 @@
 #include <WiFi.h>
 
 // === Nome e senha da rede da moto ===
-const char* ssid = "Moto001";  // Nome do "sinal da moto"
-const char* password = "12345678"; // Senha opcional
+const char* ssid = "Moto001"; 
+const char* password = ""; 
 
 void setup() {
   Serial.begin(115200);
@@ -18,5 +18,5 @@ void setup() {
 }
 
 void loop() {
-  // A moto apenas mantém o sinal emitido, sem fazer mais nada por enquanto.
+
 }
